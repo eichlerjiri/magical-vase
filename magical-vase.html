@@ -1,0 +1,157 @@
+<!DOCTYPE html>
+<html style="height: 100%;">
+	<head>
+		<title>Magical Vase</title>
+	</head>
+	<body id="body" style="height: 100%; overflow: hidden;">
+		<div id="canvasPre">
+			<h1 style="padding: 0 0.2em 0 0.2em; display: inline;">Magical Vase</h1><span style="padding-left: 2em;">density: <input id="densityInput" value="5" size="3" type="text" style="border: 1px solid grey; padding: 0 0.2em 0 0.2em;"></span><span id="hintText" style="padding-left: 2em; color: green;">start by dragging mouse by the grey line</span>
+		</div>
+		<canvas id="c" style="border: 1px solid black;"></canvas>
+		<style>
+			* {
+				margin: 0;
+				padding: 0;
+				border: 0;
+				font-size: 1em;
+			}
+		</style>
+		<script>
+			var c = document.getElementById("c");
+			var densityInput = document.getElementById("densityInput");
+			var body = document.getElementById("body");
+			var canvasPre = document.getElementById("canvasPre");
+			var hintText = document.getElementById("hintText");
+
+			var ctx = c.getContext("2d");
+			var data = [];
+			var density = 0;
+
+			var dragging = false;
+			var lastY = 0;
+			var lastVal = 0;
+
+			window.onresize = function() {
+				resizeAll();
+			}
+
+			window.onload = function() {
+				resizeAll();
+				updateDensity();
+			}
+
+			function resizeAll() {
+				c.width = body.offsetWidth - 2;
+				c.height = body.offsetHeight - canvasPre.offsetHeight - 2;
+
+				data.length = Math.round(c.height);
+
+				drawCircles();
+			}
+
+			densityInput.onchange = function() {
+				updateDensity();
+				drawCircles();
+
+				return false;
+			}
+
+			c.onmousedown = function(event) {
+				dragging = true;
+				lastY = Math.round(event.clientY - c.getBoundingClientRect().top);
+				lastVal = Math.abs(event.clientX - c.getBoundingClientRect().left - c.width / 2);
+
+				hintText.style.display = "none";
+
+				return false;
+			}
+
+			c.oncontextmenu = function() {
+				data = [];
+				data.length = Math.round(c.height);
+
+				drawCircles();
+
+				return false;
+			}
+
+			window.onmouseup = function(event) {
+				if(dragging) {
+					dragging = false;
+
+					return false;
+				}
+			}
+
+			window.onmousemove = function(event) {
+				if(dragging) {
+					var y = Math.round(event.clientY - c.getBoundingClientRect().top);
+					var val = Math.abs(event.clientX - c.getBoundingClientRect().left - c.width / 2);
+
+					var length = data.length;
+					var sth = false;
+
+					for(var i = lastY + 1; i <= y; i++) {
+						if(i >= 0 && i < length) {
+							data[i] = lastVal + (val - lastVal) * (i - lastY) / (y - lastY);
+							sth = true;
+						}
+					}
+					for(var i = y; i < lastY; i++) {
+						if(i >= 0 && i < length) {
+							data[i] = lastVal + (val - lastVal) * (i - lastY) / (y - lastY);
+							sth = true;
+						}
+					}
+
+					if(sth) {
+						drawCircles();
+					}
+
+					lastY = y;
+					lastVal = val;
+
+					return false;
+				}
+			};
+
+			function updateDensity() {
+				density = parseInt(densityInput.value);
+				if(isNaN(density) || density <= 0) {
+					density = 5;
+				}
+				densityInput.value = density.toString();
+			}
+
+			function drawCircles() {
+				var xpos = c.width / 2;
+				var angle = 2 * Math.PI;
+
+				ctx.clearRect(0, 0, c.width, c.height);
+
+		 		ctx.strokeStyle = "#BBBBBB";
+				ctx.beginPath();
+				ctx.moveTo(xpos, 0);
+				ctx.lineTo(xpos, c.height);
+				ctx.stroke();
+
+				for (var i = data.length - 1; i >= 0; i--) {
+					var val = data[i];
+
+					if(i % density != 0 || typeof val === "undefined") {
+						continue;
+					}
+
+					var grd = ctx.createLinearGradient(0, i - val, 0, i + val);
+					grd.addColorStop(0, "#EEEEEE");
+					grd.addColorStop(1, "#000000");
+
+		 			ctx.strokeStyle = grd;
+					ctx.beginPath();
+					ctx.arc(xpos, i, val, 0, angle);
+					ctx.stroke();
+				}
+			}
+		</script>
+	</body>
+</html>
