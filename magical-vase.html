@@ -2,18 +2,33 @@
 <html style="height: 100%;">
 	<head>
 		<title>Magical Vase</title>
+		<meta name="viewport" content="initial-scale=1, user-scalable=0">
 	</head>
 	<body id="body" style="height: 100%; overflow: hidden;">
 		<div id="canvasPre">
-			<h1 style="padding: 0 0.2em 0 0.2em; display: inline;">Magical Vase</h1><span style="padding-left: 2em;">density: <input id="densityInput" value="5" size="3" type="text" style="border: 1px solid grey; padding: 0 0.2em 0 0.2em;"></span><span id="hintText" style="padding-left: 2em; color: green;">start by dragging mouse by the grey line</span>
+			<h1 style="display: inline; margin-left: 0.2em;">Magical Vase</h1><span style="margin-left: 1em;">density: </span><input id="densityInput" value="5" type="number" min="1" style="width: 3em;"><input id="applyButton" type="button" value="apply"><input id="clearButton" type="button" value="clear" style="margin-left: 0.5em;"><span id="hintText" style="margin-left: 0.5em; color: #008000;">start by dragging by the grey line</span>
 		</div>
-		<canvas id="c" style="border: 1px solid black;"></canvas>
+		<canvas id="c" style="border: 1px solid #000000;"></canvas>
 		<style>
 			* {
 				margin: 0;
 				padding: 0;
-				border: 0;
+				border-width: 0;
 				font-size: 1em;
+				vertical-align: baseline;
+			}
+
+			input {
+				border: 1px solid #808080;
+				padding: 0.2em 0.3em 0.2em 0.3em;
+			}
+
+			input[type=button] {
+				background-color: #E0E0E0;
+			}
+
+			input[type=button]:active {
+				background-color: #A0A0A0;
 			}
 		</style>
 		<script>
@@ -22,8 +37,15 @@
 			var body = document.getElementById("body");
 			var canvasPre = document.getElementById("canvasPre");
 			var hintText = document.getElementById("hintText");
+			var clearButton = document.getElementById("clearButton");
+			var applyButton = document.getElementById("applyButton");
 
 			var ctx = c.getContext("2d");
+			var pixelRatio = window.devicePixelRatio;
+			if(typeof pixelRatio === "undefined") {
+				pixelRatio = 1;
+			}
+
 			var data = [];
 			var density = 0;
 
@@ -41,15 +63,31 @@
 			}
 
 			function resizeAll() {
-				c.width = body.offsetWidth - 2;
-				c.height = body.offsetHeight - canvasPre.offsetHeight - 2;
+				var width = (body.offsetWidth - 2);
+				var height = (body.offsetHeight - canvasPre.offsetHeight - 2);
 
-				data.length = Math.round(c.height);
+				c.width = width * window.devicePixelRatio;
+				c.height = height * window.devicePixelRatio;
+				c.style.width = width + "px";
+				c.style.height = height + "px";
+
+				var newLength = Math.round(c.height);
+				if(data.length < newLength) {
+					data.length = newLength;
+				}
 
 				drawCircles();
 			}
 
 			densityInput.onchange = function() {
+				return handleDensityChange();
+			}
+
+			applyButton.onclick = function() {
+				return handleDensityChange();
+			}
+
+			function handleDensityChange() {
 				updateDensity();
 				drawCircles();
 
@@ -57,16 +95,38 @@
 			}
 
 			c.onmousedown = function(event) {
-				dragging = true;
-				lastY = Math.round(event.clientY - c.getBoundingClientRect().top);
-				lastVal = Math.abs(event.clientX - c.getBoundingClientRect().left - c.width / 2);
+				return handleStart(event.clientX, event.clientY);
+			}
 
-				hintText.style.display = "none";
+			c.ontouchstart = function(event) {
+				return handleStart(event.changedTouches[0].clientX, event.changedTouches[0].clientY);
+			}
+
+			function handleStart(x, y) {
+				x *= pixelRatio;
+				y *= pixelRatio;
+
+				dragging = true;
+				lastY = Math.round(y - c.getBoundingClientRect().top);
+				lastVal = Math.abs(x - c.getBoundingClientRect().left - c.width / 2);
+
+				if(hintText.style.display != "none") {
+					hintText.style.display = "none";
+					resizeAll();
+				}
 
 				return false;
 			}
 
 			c.oncontextmenu = function() {
+				return handleClear();
+			}
+
+			clearButton.onclick = function() {
+				return handleClear();
+			}
+
+			function handleClear() {
 				data = [];
 				data.length = Math.round(c.height);
 
@@ -76,6 +136,18 @@
 			}
 
 			window.onmouseup = function(event) {
+				return handleEnd();
+			}
+
+			c.ontouchend = function(event) {
+				return handleEnd();
+			}
+
+			c.ontouchcancel = function(event) {
+				return handleEnd();
+			}
+
+			function handleEnd() {
 				if(dragging) {
 					dragging = false;
 
@@ -83,10 +155,21 @@
 				}
 			}
 
+			c.ontouchmove = function(event) {
+				return handleMove(event.changedTouches[0].clientX, event.changedTouches[0].clientY);
+			}
+
 			window.onmousemove = function(event) {
+				return handleMove(event.clientX, event.clientY);
+			}
+
+			function handleMove(x, y) {
 				if(dragging) {
-					var y = Math.round(event.clientY - c.getBoundingClientRect().top);
-					var val = Math.abs(event.clientX - c.getBoundingClientRect().left - c.width / 2);
+					x *= pixelRatio;
+					y *= pixelRatio;
+
+					var y = Math.round(y - c.getBoundingClientRect().top);
+					var val = Math.abs(x - c.getBoundingClientRect().left - c.width / 2);
 
 					var length = data.length;
 					var sth = false;
