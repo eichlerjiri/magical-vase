@@ -1,10 +1,10 @@
 <!DOCTYPE html>
-<html style="height: 100%;">
+<html>
 	<head>
 		<title>Magical Vase</title>
 		<meta name="viewport" content="initial-scale=1, user-scalable=0">
 	</head>
-	<body id="body" style="height: 100%; overflow: hidden;">
+	<body id="body" style="overflow: hidden;">
 		<div id="canvasPre">
 			<h1 style="display: inline; margin-left: 0.2em;">Magical Vase</h1><span style="margin-left: 1em;">density: </span><input id="densityInput" value="5" type="number" min="1" style="width: 3em;"><input id="applyButton" type="button" value="apply"><input id="clearButton" type="button" value="clear" style="margin-left: 0.5em;"><span id="hintText" style="margin-left: 0.5em; color: #008000;">start by dragging by the grey line</span>
 		</div>
@@ -50,6 +50,7 @@
 			var density = 0;
 
 			var dragging = false;
+			var touchID = -1;
 			var lastY = 0;
 			var lastVal = 0;
 
@@ -63,8 +64,8 @@
 			}
 
 			function resizeAll() {
-				var width = (body.offsetWidth - 2);
-				var height = (body.offsetHeight - canvasPre.offsetHeight - 2);
+				var width = (window.innerWidth - 2);
+				var height = (window.innerHeight - canvasPre.offsetHeight - 2);
 
 				c.width = width * window.devicePixelRatio;
 				c.height = height * window.devicePixelRatio;
@@ -95,18 +96,23 @@
 			}
 
 			c.onmousedown = function(event) {
+				dragging = true;
 				return handleStart(event.clientX, event.clientY);
 			}
 
 			c.ontouchstart = function(event) {
-				return handleStart(event.changedTouches[0].clientX, event.changedTouches[0].clientY);
+				if(touchID == -1) {
+					var touch = event.changedTouches[0];
+
+					touchID = touch.identifier;
+					return handleStart(touch.clientX, touch.clientY);
+				}
 			}
 
 			function handleStart(x, y) {
 				x *= pixelRatio;
 				y *= pixelRatio;
 
-				dragging = true;
 				lastY = Math.round(y - c.getBoundingClientRect().top);
 				lastVal = Math.abs(x - c.getBoundingClientRect().left - c.width / 2);
 
@@ -136,18 +142,6 @@
 			}
 
 			window.onmouseup = function(event) {
-				return handleEnd();
-			}
-
-			c.ontouchend = function(event) {
-				return handleEnd();
-			}
-
-			c.ontouchcancel = function(event) {
-				return handleEnd();
-			}
-
-			function handleEnd() {
 				if(dragging) {
 					dragging = false;
 
@@ -155,48 +149,68 @@
 				}
 			}
 
-			c.ontouchmove = function(event) {
-				return handleMove(event.changedTouches[0].clientX, event.changedTouches[0].clientY);
+			c.ontouchend = function(event) {
+				handleTouchEnd(event);
 			}
 
-			window.onmousemove = function(event) {
-				return handleMove(event.clientX, event.clientY);
+			c.ontouchcancel = function(event) {
+				handleTouchEnd(event);
 			}
 
-			function handleMove(x, y) {
-				if(dragging) {
-					x *= pixelRatio;
-					y *= pixelRatio;
-
-					var y = Math.round(y - c.getBoundingClientRect().top);
-					var val = Math.abs(x - c.getBoundingClientRect().left - c.width / 2);
-
-					var length = data.length;
-					var sth = false;
-
-					for(var i = lastY + 1; i <= y; i++) {
-						if(i >= 0 && i < length) {
-							data[i] = lastVal + (val - lastVal) * (i - lastY) / (y - lastY);
-							sth = true;
-						}
-					}
-					for(var i = y; i < lastY; i++) {
-						if(i >= 0 && i < length) {
-							data[i] = lastVal + (val - lastVal) * (i - lastY) / (y - lastY);
-							sth = true;
-						}
-					}
-
-					if(sth) {
-						drawCircles();
-					}
-
-					lastY = y;
-					lastVal = val;
+			function handleTouchEnd(event) {
+				var touch = findCurrentTouch(event);
+				if(typeof touch !== "undefined") {
+					touchID = -1;
 
 					return false;
 				}
-			};
+			}
+
+			c.ontouchmove = function(event) {
+				var touch = findCurrentTouch(event);
+				if(typeof touch !== "undefined") {
+					return handleMove(touch.clientX, touch.clientY);
+				}
+			}
+
+			window.onmousemove = function(event) {
+				if(dragging) {
+					return handleMove(event.clientX, event.clientY);
+				}
+			}
+
+			function handleMove(x, y) {
+				x *= pixelRatio;
+				y *= pixelRatio;
+
+				var y = Math.round(y - c.getBoundingClientRect().top);
+				var val = Math.abs(x - c.getBoundingClientRect().left - c.width / 2);
+
+				var length = data.length;
+				var sth = false;
+
+				for(var i = lastY + 1; i <= y; i++) {
+					if(i >= 0 && i < length) {
+						data[i] = lastVal + (val - lastVal) * (i - lastY) / (y - lastY);
+						sth = true;
+					}
+				}
+				for(var i = y; i < lastY; i++) {
+					if(i >= 0 && i < length) {
+						data[i] = lastVal + (val - lastVal) * (i - lastY) / (y - lastY);
+						sth = true;
+					}
+				}
+
+				if(sth) {
+					drawCircles();
+				}
+
+				lastY = y;
+				lastVal = val;
+
+				return false;
+			}
 
 			function updateDensity() {
 				density = parseInt(densityInput.value);
@@ -233,6 +247,16 @@
 					ctx.beginPath();
 					ctx.arc(xpos, i, val, 0, angle);
 					ctx.stroke();
+				}
+			}
+
+			function findCurrentTouch(event) {
+				var length = event.changedTouches.length;
+				for(var i = 0; i < length; i++) {
+					var touch = event.changedTouches[i];
+					if(touch.identifier == touchID) {
+						return touch;
+					}
 				}
 			}
 		</script>
