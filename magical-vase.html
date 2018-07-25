@@ -5,7 +5,7 @@
 		<meta name="viewport" content="initial-scale=1, user-scalable=0">
 	</head>
 	<body id="body" style="overflow: hidden;">
-		<div id="canvasPre">
+		<div id="headerBlock">
 			<h1 style="display: inline; margin-left: 0.2em;">Magical Vase</h1><span style="margin-left: 1em;">density: </span><input id="densityInput" value="5" type="number" min="1" style="width: 3em;"><input id="applyButton" type="button" value="apply"><input id="clearButton" type="button" value="clear" style="margin-left: 0.5em;"><span id="hintText" style="margin-left: 0.5em; color: #008000;">start by dragging by the grey line</span>
 		</div>
 		<canvas id="c" style="border: 1px solid #000000;"></canvas>
@@ -35,45 +35,44 @@
 			var c = document.getElementById("c");
 			var densityInput = document.getElementById("densityInput");
 			var body = document.getElementById("body");
-			var canvasPre = document.getElementById("canvasPre");
+			var headerBlock = document.getElementById("headerBlock");
 			var hintText = document.getElementById("hintText");
 			var clearButton = document.getElementById("clearButton");
 			var applyButton = document.getElementById("applyButton");
 
 			var ctx = c.getContext("2d");
 			var pixelRatio = window.devicePixelRatio;
-			if(typeof pixelRatio === "undefined") {
+			if (pixelRatio === undefined) {
 				pixelRatio = 1;
 			}
 
 			var data = [];
-			var density = 0;
+			var density = 5;
 
 			var dragging = false;
 			var touchID = -1;
 			var lastY = 0;
 			var lastVal = 0;
 
-			window.onresize = function() {
-				resizeAll();
-			}
-
 			window.onload = function() {
-				resizeAll();
-				updateDensity();
+				resizeCanvas();
 			}
 
-			function resizeAll() {
-				var width = (window.innerWidth - 2);
-				var height = (window.innerHeight - canvasPre.offsetHeight - 2);
+			window.onresize = function() {
+				resizeCanvas();
+			}
 
-				c.width = width * window.devicePixelRatio;
-				c.height = height * window.devicePixelRatio;
+			function resizeCanvas() {
+				var width = (window.innerWidth - 2);
+				var height = (window.innerHeight - headerBlock.offsetHeight - 2);
+
+				c.width = width * pixelRatio;
+				c.height = height * pixelRatio;
 				c.style.width = width + "px";
 				c.style.height = height + "px";
 
 				var newLength = Math.round(c.height);
-				if(data.length < newLength) {
+				if (data.length < newLength) {
 					data.length = newLength;
 				}
 
@@ -101,7 +100,7 @@
 			}
 
 			c.ontouchstart = function(event) {
-				if(touchID == -1) {
+				if (touchID === -1) {
 					var touch = event.changedTouches[0];
 
 					touchID = touch.identifier;
@@ -113,12 +112,13 @@
 				x *= pixelRatio;
 				y *= pixelRatio;
 
-				lastY = Math.round(y - c.getBoundingClientRect().top);
-				lastVal = Math.abs(x - c.getBoundingClientRect().left - c.width / 2);
+				var boundingRect = c.getBoundingClientRect();
+				lastVal = Math.abs(x - boundingRect.left - c.width / 2);
+				lastY = Math.round(y - boundingRect.top);
 
-				if(hintText.style.display != "none") {
+				if (hintText.style.display !== "none") {
 					hintText.style.display = "none";
-					resizeAll();
+					resizeCanvas();
 				}
 
 				return false;
@@ -142,7 +142,7 @@
 			}
 
 			window.onmouseup = function(event) {
-				if(dragging) {
+				if (dragging) {
 					dragging = false;
 
 					return false;
@@ -159,7 +159,7 @@
 
 			function handleTouchEnd(event) {
 				var touch = findCurrentTouch(event);
-				if(typeof touch !== "undefined") {
+				if (touch !== undefined) {
 					touchID = -1;
 
 					return false;
@@ -168,13 +168,13 @@
 
 			c.ontouchmove = function(event) {
 				var touch = findCurrentTouch(event);
-				if(typeof touch !== "undefined") {
+				if (touch !== undefined) {
 					return handleMove(touch.clientX, touch.clientY);
 				}
 			}
 
 			window.onmousemove = function(event) {
-				if(dragging) {
+				if (dragging) {
 					return handleMove(event.clientX, event.clientY);
 				}
 			}
@@ -183,20 +183,21 @@
 				x *= pixelRatio;
 				y *= pixelRatio;
 
-				var y = Math.round(y - c.getBoundingClientRect().top);
-				var val = Math.abs(x - c.getBoundingClientRect().left - c.width / 2);
+				var boundingRect = c.getBoundingClientRect();
+				var y = Math.round(y - boundingRect.top);
+				var val = Math.abs(x - boundingRect.left - c.width / 2);
 
 				var length = data.length;
 				var sth = false;
 
-				for(var i = lastY + 1; i <= y; i++) {
-					if(i >= 0 && i < length) {
+				for (var i = lastY + 1; i <= y; i++) {
+					if (i >= 0 && i < length) {
 						data[i] = lastVal + (val - lastVal) * (i - lastY) / (y - lastY);
 						sth = true;
 					}
 				}
-				for(var i = y; i < lastY; i++) {
-					if(i >= 0 && i < length) {
+				for (var i = y; i < lastY; i++) {
+					if (i >= 0 && i < length) {
 						data[i] = lastVal + (val - lastVal) * (i - lastY) / (y - lastY);
 						sth = true;
 					}
@@ -214,7 +215,7 @@
 
 			function updateDensity() {
 				density = parseInt(densityInput.value);
-				if(isNaN(density) || density <= 0) {
+				if (isNaN(density) || density <= 0) {
 					density = 5;
 				}
 				densityInput.value = density.toString();
@@ -235,7 +236,7 @@
 				for (var i = data.length - 1; i >= 0; i--) {
 					var val = data[i];
 
-					if(i % density != 0 || typeof val === "undefined") {
+					if (i % density != 0 || val === undefined) {
 						continue;
 					}
 
@@ -251,10 +252,9 @@
 			}
 
 			function findCurrentTouch(event) {
-				var length = event.changedTouches.length;
-				for(var i = 0; i < length; i++) {
+				for (var i = 0; i < event.changedTouches.length; i++) {
 					var touch = event.changedTouches[i];
-					if(touch.identifier == touchID) {
+					if (touch.identifier === touchID) {
 						return touch;
 					}
 				}
