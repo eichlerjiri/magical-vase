@@ -54,13 +54,8 @@
 			var lastY = 0;
 			var lastVal = 0;
 
-			window.onload = function() {
-				resizeCanvas();
-			}
-
-			window.onresize = function() {
-				resizeCanvas();
-			}
+			window.onload = resizeCanvas;
+			window.onresize = resizeCanvas;
 
 			function resizeCanvas() {
 				var width = (window.innerWidth - 2);
@@ -79,13 +74,8 @@
 				drawCircles();
 			}
 
-			densityInput.onchange = function() {
-				return handleDensityChange();
-			}
-
-			applyButton.onclick = function() {
-				return handleDensityChange();
-			}
+			densityInput.onchange = handleDensityChange;
+			applyButton.onclick = handleDensityChange;
 
 			function handleDensityChange() {
 				updateDensity();
@@ -124,13 +114,8 @@
 				return false;
 			}
 
-			c.oncontextmenu = function() {
-				return handleClear();
-			}
-
-			clearButton.onclick = function() {
-				return handleClear();
-			}
+			c.oncontextmenu = handleClear;
+			clearButton.onclick = handleClear;
 
 			function handleClear() {
 				data = [];
@@ -149,13 +134,8 @@
 				}
 			}
 
-			c.ontouchend = function(event) {
-				handleTouchEnd(event);
-			}
-
-			c.ontouchcancel = function(event) {
-				handleTouchEnd(event);
-			}
+			c.ontouchend = handleTouchEnd;
+			c.ontouchcancel = handleTouchEnd;
 
 			function handleTouchEnd(event) {
 				var touch = findCurrentTouch(event);
