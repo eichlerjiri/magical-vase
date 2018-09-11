@@ -6,239 +6,244 @@
 	</head>
 	<body id="body" style="overflow: hidden;">
 		<div id="headerBlock">
-			<h1 style="display: inline; margin-left: 0.2em;">Magical Vase</h1><span style="margin-left: 1em;">density: </span><input id="densityInput" value="5" type="number" min="1" style="width: 3em;"><input id="applyButton" type="button" value="apply"><input id="clearButton" type="button" value="clear" style="margin-left: 0.5em;"><span id="hintText" style="margin-left: 0.5em; color: #008000;">start by dragging by the grey line</span>
+<h1 style="display: inline; margin-left: 0.2em;">Magical Vase</h1
+><span style="margin-left: 1em;">density: </span
+><input id="densityInput" value="5" type="number" min="1" style="width: 3em;"
+><input id="applyButton" type="button" value="apply"
+><input id="clearButton" type="button" value="clear" style="margin-left: 0.5em;"
+><span id="hintText" style="margin-left: 0.5em; color: #008000;">start by dragging by the grey line</span>
 		</div>
 		<canvas id="c" style="border: 1px solid #000000;"></canvas>
 		<style>
-			* {
-				margin: 0;
-				padding: 0;
-				border-width: 0;
-				font-size: 1em;
-				vertical-align: baseline;
-			}
+* {
+	margin: 0;
+	padding: 0;
+	border-width: 0;
+	font-size: 1em;
+	vertical-align: baseline;
+}
 
-			input {
-				border: 1px solid #808080;
-				padding: 0.2em 0.3em 0.2em 0.3em;
-			}
+input {
+	border: 1px solid #808080;
+	padding: 0.2em 0.3em 0.2em 0.3em;
+}
 
-			input[type=button] {
-				background-color: #E0E0E0;
-			}
+input[type=button] {
+	background-color: #E0E0E0;
+}
 
-			input[type=button]:active {
-				background-color: #A0A0A0;
-			}
+input[type=button]:active {
+	background-color: #A0A0A0;
+}
 		</style>
 		<script>
-			var c = document.getElementById("c");
-			var densityInput = document.getElementById("densityInput");
-			var body = document.getElementById("body");
-			var headerBlock = document.getElementById("headerBlock");
-			var hintText = document.getElementById("hintText");
-			var clearButton = document.getElementById("clearButton");
-			var applyButton = document.getElementById("applyButton");
+var c = document.getElementById("c");
+var densityInput = document.getElementById("densityInput");
+var body = document.getElementById("body");
+var headerBlock = document.getElementById("headerBlock");
+var hintText = document.getElementById("hintText");
+var clearButton = document.getElementById("clearButton");
+var applyButton = document.getElementById("applyButton");
 
-			var ctx = c.getContext("2d");
-			var pixelRatio = window.devicePixelRatio;
-			if (pixelRatio === undefined) {
-				pixelRatio = 1;
-			}
+var ctx = c.getContext("2d");
+var pixelRatio = window.devicePixelRatio;
+if (pixelRatio === undefined) {
+	pixelRatio = 1;
+}
 
-			var data = [];
-			var density = 5;
+var data = [];
+var density = 5;
 
-			var dragging = false;
-			var touchID = -1;
-			var lastY = 0;
-			var lastVal = 0;
+var dragging = false;
+var touchID = -1;
+var lastY = 0;
+var lastVal = 0;
 
-			window.onload = resizeCanvas;
-			window.onresize = resizeCanvas;
+window.onload = resizeCanvas;
+window.onresize = resizeCanvas;
 
-			function resizeCanvas() {
-				var width = (window.innerWidth - 2);
-				var height = (window.innerHeight - headerBlock.offsetHeight - 2);
+function resizeCanvas() {
+	var width = (window.innerWidth - 2);
+	var height = (window.innerHeight - headerBlock.offsetHeight - 2);
 
-				c.width = width * pixelRatio;
-				c.height = height * pixelRatio;
-				c.style.width = width + "px";
-				c.style.height = height + "px";
+	c.width = width * pixelRatio;
+	c.height = height * pixelRatio;
+	c.style.width = width + "px";
+	c.style.height = height + "px";
 
-				var newLength = Math.round(c.height);
-				if (data.length < newLength) {
-					data.length = newLength;
-				}
+	var newLength = Math.round(c.height);
+	if (data.length < newLength) {
+		data.length = newLength;
+	}
 
-				drawCircles();
-			}
+	drawCircles();
+}
 
-			densityInput.onchange = handleDensityChange;
-			applyButton.onclick = handleDensityChange;
+densityInput.onchange = handleDensityChange;
+applyButton.onclick = handleDensityChange;
 
-			function handleDensityChange() {
-				updateDensity();
-				drawCircles();
+function handleDensityChange() {
+	updateDensity();
+	drawCircles();
 
-				return false;
-			}
+	return false;
+}
 
-			c.onmousedown = function(event) {
-				dragging = true;
-				return handleStart(event.clientX, event.clientY);
-			}
+c.onmousedown = function(event) {
+	dragging = true;
+	return handleStart(event.clientX, event.clientY);
+}
 
-			c.ontouchstart = function(event) {
-				if (touchID === -1) {
-					var touch = event.changedTouches[0];
+c.ontouchstart = function(event) {
+	if (touchID === -1) {
+		var touch = event.changedTouches[0];
 
-					touchID = touch.identifier;
-					return handleStart(touch.clientX, touch.clientY);
-				}
-			}
+		touchID = touch.identifier;
+		return handleStart(touch.clientX, touch.clientY);
+	}
+}
 
-			function handleStart(x, y) {
-				x *= pixelRatio;
-				y *= pixelRatio;
+function handleStart(x, y) {
+	x *= pixelRatio;
+	y *= pixelRatio;
 
-				var boundingRect = c.getBoundingClientRect();
-				lastVal = Math.abs(x - boundingRect.left - c.width / 2);
-				lastY = Math.round(y - boundingRect.top);
+	var boundingRect = c.getBoundingClientRect();
+	lastVal = Math.abs(x - boundingRect.left - c.width / 2);
+	lastY = Math.round(y - boundingRect.top);
 
-				if (hintText.style.display !== "none") {
-					hintText.style.display = "none";
-					resizeCanvas();
-				}
+	if (hintText.style.display !== "none") {
+		hintText.style.display = "none";
+		resizeCanvas();
+	}
 
-				return false;
-			}
+	return false;
+}
 
-			c.oncontextmenu = handleClear;
-			clearButton.onclick = handleClear;
+c.oncontextmenu = handleClear;
+clearButton.onclick = handleClear;
 
-			function handleClear() {
-				data = [];
-				data.length = Math.round(c.height);
+function handleClear() {
+	data = [];
+	data.length = Math.round(c.height);
 
-				drawCircles();
+	drawCircles();
 
-				return false;
-			}
+	return false;
+}
 
-			window.onmouseup = function(event) {
-				if (dragging) {
-					dragging = false;
+window.onmouseup = function(event) {
+	if (dragging) {
+		dragging = false;
 
-					return false;
-				}
-			}
+		return false;
+	}
+}
 
-			c.ontouchend = handleTouchEnd;
-			c.ontouchcancel = handleTouchEnd;
+c.ontouchend = handleTouchEnd;
+c.ontouchcancel = handleTouchEnd;
 
-			function handleTouchEnd(event) {
-				var touch = findCurrentTouch(event);
-				if (touch !== undefined) {
-					touchID = -1;
+function handleTouchEnd(event) {
+	var touch = findCurrentTouch(event);
+	if (touch !== undefined) {
+		touchID = -1;
 
-					return false;
-				}
-			}
+		return false;
+	}
+}
 
-			c.ontouchmove = function(event) {
-				var touch = findCurrentTouch(event);
-				if (touch !== undefined) {
-					return handleMove(touch.clientX, touch.clientY);
-				}
-			}
+c.ontouchmove = function(event) {
+	var touch = findCurrentTouch(event);
+	if (touch !== undefined) {
+		return handleMove(touch.clientX, touch.clientY);
+	}
+}
 
-			window.onmousemove = function(event) {
-				if (dragging) {
-					return handleMove(event.clientX, event.clientY);
-				}
-			}
+window.onmousemove = function(event) {
+	if (dragging) {
+		return handleMove(event.clientX, event.clientY);
+	}
+}
 
-			function handleMove(x, y) {
-				x *= pixelRatio;
-				y *= pixelRatio;
+function handleMove(x, y) {
+	x *= pixelRatio;
+	y *= pixelRatio;
 
-				var boundingRect = c.getBoundingClientRect();
-				var y = Math.round(y - boundingRect.top);
-				var val = Math.abs(x - boundingRect.left - c.width / 2);
+	var boundingRect = c.getBoundingClientRect();
+	var y = Math.round(y - boundingRect.top);
+	var val = Math.abs(x - boundingRect.left - c.width / 2);
 
-				var length = data.length;
-				var sth = false;
+	var length = data.length;
+	var sth = false;
 
-				for (var i = lastY + 1; i <= y; i++) {
-					if (i >= 0 && i < length) {
-						data[i] = lastVal + (val - lastVal) * (i - lastY) / (y - lastY);
-						sth = true;
-					}
-				}
-				for (var i = y; i < lastY; i++) {
-					if (i >= 0 && i < length) {
-						data[i] = lastVal + (val - lastVal) * (i - lastY) / (y - lastY);
-						sth = true;
-					}
-				}
+	for (var i = lastY + 1; i <= y; i++) {
+		if (i >= 0 && i < length) {
+			data[i] = lastVal + (val - lastVal) * (i - lastY) / (y - lastY);
+			sth = true;
+		}
+	}
+	for (var i = y; i < lastY; i++) {
+		if (i >= 0 && i < length) {
+			data[i] = lastVal + (val - lastVal) * (i - lastY) / (y - lastY);
+			sth = true;
+		}
+	}
 
-				if(sth) {
-					drawCircles();
-				}
+	if(sth) {
+		drawCircles();
+	}
 
-				lastY = y;
-				lastVal = val;
+	lastY = y;
+	lastVal = val;
 
-				return false;
-			}
+	return false;
+}
 
-			function updateDensity() {
-				density = parseInt(densityInput.value);
-				if (isNaN(density) || density <= 0) {
-					density = 5;
-				}
-				densityInput.value = density.toString();
-			}
+function updateDensity() {
+	density = parseInt(densityInput.value);
+	if (isNaN(density) || density <= 0) {
+		density = 5;
+	}
+	densityInput.value = density.toString();
+}
 
-			function drawCircles() {
-				var xpos = c.width / 2;
-				var angle = 2 * Math.PI;
+function drawCircles() {
+	var xpos = c.width / 2;
+	var angle = 2 * Math.PI;
 
-				ctx.clearRect(0, 0, c.width, c.height);
+	ctx.clearRect(0, 0, c.width, c.height);
 
-		 		ctx.strokeStyle = "#BBBBBB";
-				ctx.beginPath();
-				ctx.moveTo(xpos, 0);
-				ctx.lineTo(xpos, c.height);
-				ctx.stroke();
+	ctx.strokeStyle = "#BBBBBB";
+	ctx.beginPath();
+	ctx.moveTo(xpos, 0);
+	ctx.lineTo(xpos, c.height);
+	ctx.stroke();
 
-				for (var i = data.length - 1; i >= 0; i--) {
-					var val = data[i];
+	for (var i = data.length - 1; i >= 0; i--) {
+		var val = data[i];
 
-					if (i % density != 0 || val === undefined) {
-						continue;
-					}
+		if (i % density != 0 || val === undefined) {
+			continue;
+		}
 
-					var grd = ctx.createLinearGradient(0, i - val, 0, i + val);
-					grd.addColorStop(0, "#EEEEEE");
-					grd.addColorStop(1, "#000000");
+		var grd = ctx.createLinearGradient(0, i - val, 0, i + val);
+		grd.addColorStop(0, "#EEEEEE");
+		grd.addColorStop(1, "#000000");
 
-		 			ctx.strokeStyle = grd;
-					ctx.beginPath();
-					ctx.arc(xpos, i, val, 0, angle);
-					ctx.stroke();
-				}
-			}
+		ctx.strokeStyle = grd;
+		ctx.beginPath();
+		ctx.arc(xpos, i, val, 0, angle);
+		ctx.stroke();
+	}
+}
 
-			function findCurrentTouch(event) {
-				for (var i = 0; i < event.changedTouches.length; i++) {
-					var touch = event.changedTouches[i];
-					if (touch.identifier === touchID) {
-						return touch;
-					}
-				}
-			}
+function findCurrentTouch(event) {
+	for (var i = 0; i < event.changedTouches.length; i++) {
+		var touch = event.changedTouches[i];
+		if (touch.identifier === touchID) {
+			return touch;
+		}
+	}
+}
 		</script>
 	</body>
 </html>
