@@ -4,7 +4,7 @@
 		<title>Magical Vase</title>
 		<meta name="viewport" content="initial-scale=1, user-scalable=0">
 	</head>
-	<body id="body" style="overflow: hidden;">
+	<body id="body" style="overflow: hidden; visibility: hidden;">
 		<div id="headerBlock">
 <h1 style="display: inline; margin-left: 0.2em;">Magical Vase</h1
 ><span style="margin-left: 1em;">density: </span
@@ -59,7 +59,11 @@ var touchID = -1;
 var lastY = 0;
 var lastVal = 0;
 
-window.onload = resizeCanvas;
+window.onload = function() {
+	resizeCanvas();
+	body.style.visibility = "visible";
+}
+
 window.onresize = resizeCanvas;
 
 function resizeCanvas() {
