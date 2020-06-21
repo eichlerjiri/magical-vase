@@ -7,7 +7,7 @@
 	<body id="body" style="overflow: hidden; visibility: hidden;">
 		<div id="headerBlock">
 			<h1 style="margin-left: 0.2em; padding: 1px; float: left;">Magical Vase</h1>
-			<span style="margin-left: 1em; padding: 1px; float: left;">density:</span>
+			<label for="densityInput" style="margin-left: 1em; padding: 1px; float: left;">density:</label>
 			<input id="densityInput" value="5" type="number" min="1" style="width: 3em; margin-left: 0.2em; float: left;">
 			<input id="applyButton" type="button" value="apply" style="float: left;">
 			<input id="clearButton" type="button" value="clear" style="margin-left: 0.5em; float: left;">
@@ -18,9 +18,14 @@
 * {
 	margin: 0;
 	padding: 0;
-	border-width: 0;
+	border: 0;
+	outline: 0;
 	font-size: 1em;
 	line-height: 1.5em;
+}
+
+*::-moz-focus-inner {
+	border: 0;
 }
 
 input {
